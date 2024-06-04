@@ -2,8 +2,14 @@
     import { contactValidation, favoriteValidation } from "../validations/validation.js";
     import { httpError } from "../helpers/httpError.js";
 
-    const getAllContacts = async (_req, res) => {
-    const result = await Contact.find();
+    const getAllContacts = async (req, res) => {
+    const { page = 1, limit = 20, favorite } = req.query;         
+    const query = favorite ? { favorite: true } : {};                   
+
+    const result = await Contact.find(query)
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit));
+
     res.json(result);
     };
 
@@ -19,10 +25,11 @@
     };
 
     const addContact = async (req, res) => {
+    // Preventing lack of necessary data for contacts (check validations folder)
     const { error } = contactValidation.validate(req.body);
 
     if (error) {
-        throw httpError(400, "missing required name field");
+        throw httpError(400, "missing required fields");
     }
 
     const result = await Contact.create(req.body);
@@ -80,3 +87,6 @@
     };
 
     export { getAllContacts, getContactById, addContact, deleteContactById, updateContactById, updateStatusContact};
+
+
+    
